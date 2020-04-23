@@ -42,18 +42,51 @@ y = data.iloc[:, data.columns == 'Class']
 from sklearn.model_selection import train_test_split
 X_train, X_test, y_train, y_test = train_test_split(X,y, test_size = 0.3, random_state=0)
 
-## Decison Tree
-from sklearn.tree import DecisionTreeClassifier
-classifier = DecisionTreeClassifier(random_state = 0,
-                                    criterion = 'gini',  splitter='best', min_samples_leaf=1, min_samples_split=2)
-classifier.fit(X_train, y_train)
-# Predicting Test Set
-y_pred = classifier.predict(X_test)
-acc = sklearn.metrics.accuracy_score(y_test, y_pred)
-prec = sklearn.metrics.precision_score(y_test, y_pred)
-rec = sklearn.metrics.recall_score(y_test, y_pred)
-f1 = sklearn.metrics.f1_score(y_test, y_pred)
-results = pandas.DataFrame([['Decision tree', acc, prec, rec, f1]], columns = ['Model', 'Accuracy', 'Precision', 'Recall', 'F1 Score'])
+# Importing the Keras libraries and packages
+import keras
+from keras.models import Sequential
+from keras.layers import Dense
+# Initialising the ANN
+classifier = Sequential()
+# Adding the input layer and the first hidden layer
+classifier.add(Dense(units =15 , kernel_initializer = 'uniform', activation = 'relu', input_dim = 29))
+# Adding the second hidden layer
+classifier.add(Dense(units = 15, kernel_initializer = 'uniform', activation = 'relu'))
+# Adding the output layer
+classifier.add(Dense(units = 1, kernel_initializer = 'uniform', activation = 'sigmoid'))
+# Compiling the ANN
+classifier.compile(optimizer = 'adam', loss = 'binary_crossentropy', metrics = ['accuracy'])
+# Fitting the ANN to the Training set
+classifier.fit(X_train, y_train, batch_size = 32, epochs = 100)
 
-print(results)
+# Predicting the Test set results
+y_pred = classifier.predict(X_test)
+y_pred = (y_pred > 0.5)
+score = classifier.evaluate(X_test, y_test)
+print("SCORE :", score)
+
+#Let's see how our model performed
+from sklearn.metrics import classification_report
+print(classification_report(y_test, y_pred))
+
+## EXTRA: Confusion Matrix
+cm = sklearn.metrics.confusion_matrix(y_test, y_pred) # rows = truth, cols = prediction
+df_cm = pandas.DataFrame(cm, index = (0, 1), columns = (0, 1))
+plt.figure(figsize = (10,7))
+sn.set(font_scale=1.4)
+sn.heatmap(df_cm, annot=True, fmt='g')
+print("Test Data Accuracy: %0.4f" % sklearn.metrics.accuracy_score(y_test, y_pred))
+
+fpr, tpr, thresholds = sklearn.metrics.roc_curve(error_df.true_class, error_df.reconstruction_error)
+roc_auc = sklearn.metrics.auc(fpr, tpr)
+plt.title('Receiver Operating Characteristic')
+plt.plot(fpr, tpr, label='AUC = %0.4f'% roc_auc)
+plt.legend(loc='lower right')
+plt.plot([0,1],[0,1],'r--')
+plt.xlim([-0.001, 1])
+plt.ylim([0, 1.001])
+plt.ylabel('True Positive Rate')
+plt.xlabel('False Positive Rate')
+plt.show()
+
 print("end")
